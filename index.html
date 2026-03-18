@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMSI Exchange Archive</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            color: #1a2b3c;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* ===== TYPOGRAPHY ===== */
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #004F98;
+            margin-bottom: 0.25rem;
+        }
+        
+        .subhead {
+            font-size: 1.25rem;
+            color: #546e7a;
+            font-weight: 400;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #e0e7ed;
+            padding-bottom: 1.5rem;
+        }
+        
+        /* ===== VOLUME HEADERS ===== */
+        .volume-header {
+            background: white;
+            border-radius: 60px;
+            padding: 18px 30px;
+            margin: 20px 0 25px 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #004F98;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 79, 152, 0.08);
+            transition: all 0.2s ease;
+            border: 1px solid #e0e7ed;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .volume-header:hover {
+            background: #f0f7ff;
+            box-shadow: 0 6px 16px rgba(0, 79, 152, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .volume-header .arrow {
+            font-size: 2rem;
+            color: #004F98;
+            transition: transform 0.3s ease;
+        }
+        
+        .volume-header.collapsed .arrow {
+            transform: rotate(-90deg);
+        }
+        
+        /* ===== ISSUE GRID ===== */
+        .issue-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+            transition: opacity 0.3s ease, max-height 0.5s ease;
+        }
+        
+        .issue-grid.collapsed {
+            display: none;
+        }
+        
+        .issue-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid #eaeef2;
+            transition: all 0.25s ease;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        
+        .issue-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px rgba(0, 79, 152, 0.12);
+            border-color: #b8d1e6;
+        }
+        
+        .cover-image {
+            width: 100%;
+            aspect-ratio: 1 / 1.3; /* Standard book cover proportion */
+            background: #d9e2ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #004F98;
+            font-weight: 500;
+            font-size: 1.1rem;
+            border-bottom: 3px solid #004F98;
+            background-image: linear-gradient(145deg, #ffffff 0%, #f0f5fa 100%);
+        }
+        
+        /* Replace with actual cover images */
+        .cover-image.has-image {
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .issue-number {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #004F98;
+            margin: 15px 0 5px 0;
+        }
+        
+        .issue-date {
+            font-size: 1rem;
+            color: #546e7a;
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+        
+        .view-pdf-btn {
+            display: inline-block;
+            background: #004F98;
+            color: white;
+            text-decoration: none;
+            padding: 10px 25px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: background 0.2s ease;
+            border: none;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .view-pdf-btn:hover {
+            background: #002a5e;
+        }
+        
+        /* ===== CONTRIBUTE SECTION ===== */
+        .contribute-box {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            margin: 50px 0 30px 0;
+            text-align: center;
+            border: 2px solid #004F98;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fcff 100%);
+        }
+        
+        .contribute-box h2 {
+            font-size: 2rem;
+            color: #004F98;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .contribute-email {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #004F98;
+            background: #e6f0ff;
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 60px;
+            margin: 20px 0 15px 0;
+            letter-spacing: -0.01em;
+            border: 1px solid #b8d1e6;
+        }
+        
+        .deadline {
+            font-size: 1.2rem;
+            color: #1a2b3c;
+            background: #fff3d8;
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 40px;
+            margin-top: 10px;
+            border-left: 4px solid #ff8c42;
+        }
+        
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #d0dce8;
+            color: #758e9e;
+            font-size: 0.9rem;
+        }
+        
+        /* ===== PDF IFRAME MODAL (Lightbox) ===== */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .pdf-modal.active {
+            display: flex;
+        }
+        
+        .pdf-container {
+            width: 90%;
+            height: 90%;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .pdf-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            z-index: 1001;
+            background: rgba(0,0,0,0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .issue-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .contribute-email {
+                font-size: 1.6rem;
+                word-break: break-all;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            .volume-header { font-size: 1.4rem; }
+            .issue-grid {
+                grid-template-columns: 1fr;
+            }
+            .contribute-email {
+                font-size: 1.4rem;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <h1>IMSI EXCHANGE</h1>
+        <div class="subhead">The Voice of Our Scientific Community · Archive</div>
+        
+        <!-- VOLUME 1 -->
+        <div class="volume-header" onclick="toggleVolume('volume1')">
+            <span>📘 VOLUME 1 · 2025-2026</span>
+            <span class="arrow" id="arrow-volume1">▼</span>
+        </div>
+        <div class="issue-grid" id="volume1">
+            <!-- Issue 1 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue1.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);" 
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #004F98 0%, #002a5e 100%)'; this.innerHTML='ISSUE #1'; this.style.color='white';">
+                    <!-- Cover image will appear here if exists -->
+                </div>
+                <div class="issue-number">Issue #1</div>
+                <div class="issue-date">January - February 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue1.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 2 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue2.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #1a5f9e 0%, #0a3a6b 100%)'; this.innerHTML='ISSUE #2'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #2</div>
+                <div class="issue-date">March - April 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue2.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 3 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue3.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #2f6fb0 0%, #154b7a 100%)'; this.innerHTML='ISSUE #3'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #3</div>
+                <div class="issue-date">May - June 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue3.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 4 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue4.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #3f80c2 0%, #1f5c91 100%)'; this.innerHTML='ISSUE #4'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #4</div>
+                <div class="issue-date">July - August 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue4.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 5 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue5.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #4f91d4 0%, #2a6da8 100%)'; this.innerHTML='ISSUE #5'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #5</div>
+                <div class="issue-date">September - October 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue5.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 6 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol1-issue6.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #5fa2e6 0%, #357ebf 100%)'; this.innerHTML='ISSUE #6'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #6</div>
+                <div class="issue-date">November - December 2024</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol1-issue6.pdf')">📄 View PDF</button>
+            </div>
+        </div>
+        
+        <!-- VOLUME 2 -->
+        <div class="volume-header collapsed" onclick="toggleVolume('volume2')">
+            <span>📗 VOLUME 2 · 2026-2027</span>
+            <span class="arrow" id="arrow-volume2">▼</span>
+        </div>
+        <div class="issue-grid collapsed" id="volume2">
+            <!-- Issue 1 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue1.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #3a7b4a 0%, #1f4d2a 100%)'; this.innerHTML='ISSUE #1'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #1</div>
+                <div class="issue-date">January - February 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue1.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 2 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue2.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #4b8c5a 0%, #2e6139 100%)'; this.innerHTML='ISSUE #2'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #2</div>
+                <div class="issue-date">March - April 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue2.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 3 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue3.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #5b9d6a 0%, #3d7449 100%)'; this.innerHTML='ISSUE #3'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #3</div>
+                <div class="issue-date">May - June 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue3.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 4 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue4.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #6bae7a 0%, #4c8e59 100%)'; this.innerHTML='ISSUE #4'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #4</div>
+                <div class="issue-date">July - August 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue4.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 5 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue5.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #7bbf8a 0%, #5ca869 100%)'; this.innerHTML='ISSUE #5'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #5</div>
+                <div class="issue-date">September - October 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue5.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 6 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol2-issue6.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #8bcf9a 0%, #6cb879 100%)'; this.innerHTML='ISSUE #6'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #6</div>
+                <div class="issue-date">November - December 2025</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol2-issue6.pdf')">📄 View PDF</button>
+            </div>
+        </div>
+        
+        <!-- VOLUME 3 -->
+        <div class="volume-header collapsed" onclick="toggleVolume('volume3')">
+            <span>📙 VOLUME 3 · 2027-2028</span>
+            <span class="arrow" id="arrow-volume3">▼</span>
+        </div>
+        <div class="issue-grid collapsed" id="volume3">
+            <!-- Issue 1 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue1.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #a54f2c 0%, #73381e 100%)'; this.innerHTML='ISSUE #1'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #1</div>
+                <div class="issue-date">January - February 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue1.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 2 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue2.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #b55f3c 0%, #84462b 100%)'; this.innerHTML='ISSUE #2'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #2</div>
+                <div class="issue-date">March - April 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue2.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 3 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue3.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #c66f4c 0%, #9a5536 100%)'; this.innerHTML='ISSUE #3'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #3</div>
+                <div class="issue-date">May - June 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue3.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 4 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue4.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #d77f5c 0%, #af6542 100%)'; this.innerHTML='ISSUE #4'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #4</div>
+                <div class="issue-date">July - August 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue4.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 5 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue5.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #e88f6c 0%, #c4754e 100%)'; this.innerHTML='ISSUE #5'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #5</div>
+                <div class="issue-date">September - October 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue5.pdf')">📄 View PDF</button>
+            </div>
+            <!-- Issue 6 -->
+            <div class="issue-card">
+                <div class="cover-image" style="background-image: url('covers/vol3-issue6.jpg'); background-size: cover; background-position: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"
+                     onerror="this.style.backgroundImage='linear-gradient(145deg, #f89f7c 0%, #d4855c 100%)'; this.innerHTML='ISSUE #6'; this.style.color='white';">
+                </div>
+                <div class="issue-number">Issue #6</div>
+                <div class="issue-date">November - December 2026</div>
+                <button class="view-pdf-btn" onclick="openPDF('pdfs/vol3-issue6.pdf')">📄 View PDF</button>
+            </div>
+        </div>
+        
+        <!-- CONTRIBUTE SECTION -->
+        <div class="contribute-box">
+            <h2>✉️ CONTRIBUTE TO THE EXCHANGE</h2>
+            <p style="font-size: 1.2rem; color: #2c3e50; margin-bottom: 20px;">Send your articles, research highlights, club news, photos & ideas</p>
+            <div class="contribute-email">📧 imsiexhange@gmail.com</div>
+            <p style="margin-top: 30px; color: #546e7a;">All students, teachers, staff, and clubs are welcome to contribute</p>
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="footer">
+            © IMSI Exchange · Updated March 2026 · All issues archived in PDF format
+        </div>
+    </div>
+    
+    <!-- PDF MODAL (for iframe viewing) -->
+    <div class="pdf-modal" id="pdfModal" onclick="closePDF(event)">
+        <div class="close-modal" onclick="closePDF(event)">×</div>
+        <div class="pdf-container">
+            <iframe id="pdfIframe" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // ===== VOLUME TOGGLE FUNCTIONALITY =====
+        // Only one volume expanded at a time
+        function toggleVolume(volumeId) {
+            const volumes = ['volume1', 'volume2', 'volume3'];
+            const clickedVolume = document.getElementById(volumeId);
+            const clickedHeader = document.querySelector(`[onclick="toggleVolume('${volumeId}')"]`);
+            const clickedArrow = document.getElementById(`arrow-${volumeId}`);
+            
+            // Check if clicked volume is currently collapsed
+            const isCollapsed = clickedVolume.classList.contains('collapsed');
+            
+            // First, collapse all volumes
+            volumes.forEach(id => {
+                const vol = document.getElementById(id);
+                const header = document.querySelector(`[onclick="toggleVolume('${id}')"]`);
+                const arrow = document.getElementById(`arrow-${id}`);
+                
+                if (vol) {
+                    vol.classList.add('collapsed');
+                }
+                if (header) {
+                    header.classList.add('collapsed');
+                }
+                if (arrow) {
+                    arrow.style.transform = 'rotate(-90deg)';
+                }
+            });
+            
+            // If the clicked volume was collapsed, expand it now
+            if (isCollapsed) {
+                clickedVolume.classList.remove('collapsed');
+                clickedHeader.classList.remove('collapsed');
+                clickedArrow.style.transform = 'rotate(0deg)';
+                
+                // Smooth scroll to this volume
+                clickedHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // If it was expanded, we leave it collapsed (since we just collapsed all)
+        }
+        
+        // ===== PDF VIEWER FUNCTION =====
+        function openPDF(pdfPath) {
+            // In a real implementation, you would use a PDF.js viewer or Google Drive viewer
+            // For Google Drive, you'd use: https://drive.google.com/viewerng/viewer?embedded=true&url=YOUR_PDF_URL
+            
+            // Example using Google Drive viewer (replace YOUR_PDF_URL with actual encoded URL)
+            // For this demo, we'll use a placeholder
+            const modal = document.getElementById('pdfModal');
+            const iframe = document.getElementById('pdfIframe');
+            
+            // IMPORTANT: Replace with your actual PDF hosting solution
+            // Option 1: If PDFs are in Google Drive
+            // const pdfUrl = encodeURIComponent('https://your-domain.com/' + pdfPath);
+            // iframe.src = `https://drive.google.com/viewerng/viewer?embedded=true&url=${pdfUrl}`;
+            
+            // Option 2: If PDFs are on your server (same domain)
+            iframe.src = pdfPath;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+        
+        function closePDF(event) {
+            // Prevent closing when clicking inside the iframe container
+            if (event.target.classList.contains('pdf-modal') || event.target.classList.contains('close-modal')) {
+                const modal = document.getElementById('pdfModal');
+                const iframe = document.getElementById('pdfIframe');
+                
+                modal.classList.remove('active');
+                iframe.src = 'about:blank'; // Stop video/audio if any
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('pdfModal');
+                if (modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                    document.getElementById('pdfIframe').src = 'about:blank';
+                    document.body.style.overflow = '';
+                }
+            }
+        });
+        
+        // Initialize: Volume 1 expanded, others collapsed
+        window.onload = function() {
+            // Ensure Volume 1 is expanded by default
+            document.getElementById('volume1').classList.remove('collapsed');
+            document.getElementById('arrow-volume1').style.transform = 'rotate(0deg)';
+            
+            // Ensure others are collapsed
+            document.getElementById('volume2').classList.add('collapsed');
+            document.getElementById('arrow-volume2').style.transform = 'rotate(-90deg)';
+            document.getElementById('volume3').classList.add('collapsed');
+            document.getElementById('arrow-volume3').style.transform = 'rotate(-90deg)';
+        };
+    </script>
+</body>
+</html>
