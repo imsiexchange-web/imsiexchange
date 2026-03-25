@@ -765,8 +765,17 @@ h1::after {
     const modal = document.getElementById('pdfModal');
     const iframe = document.getElementById('pdfIframe');
     
+    // Helper function to add cache-busting parameter
+    function addCacheBuster(url) {
+        const cacheBuster = `_cb=${Date.now()}`;
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}${cacheBuster}`;
+    }
+    
     function openPDF(pdfPath) {
-        iframe.src = pdfPath;
+        // Clear browser cache by adding timestamp parameter
+        const freshUrl = addCacheBuster(pdfPath);
+        iframe.src = freshUrl;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -788,6 +797,17 @@ h1::after {
         }
     });
     
+    // Optional: Force clear cache on page load
+    function clearBrowserCache() {
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                });
+            });
+        }
+    }
+    
     // Initialize: Volume 1 expanded, others collapsed
     window.onload = () => {
         const volumes = ['volume1', 'volume2', 'volume3'];
@@ -803,6 +823,9 @@ h1::after {
                 arrow.style.transform = 'rotate(-90deg)';
             }
         });
+        
+        // Optional: Uncomment the line below to clear cache on page load
+        // clearBrowserCache();
     };
 </script>
 </body>
